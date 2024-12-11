@@ -1,10 +1,10 @@
 package hint64
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/ebi-yade/gotest/cases"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_Parse(t *testing.T) {
@@ -37,14 +37,9 @@ func Test_Parse(t *testing.T) {
 			input: "1.2345k",
 			want:  0,
 			errCheck: func(t *testing.T, err error) {
-				if err == nil {
-					t.Error("expected error for decimal resulting in fraction")
-				}
-				if parseErr, ok := err.(*ParseError); ok {
-					if !strings.Contains(parseErr.Message, "too many decimal places") {
-						t.Errorf("expected error about decimal places, got: %v", parseErr.Message)
-					}
-				}
+				pe := &ParseError{}
+				require.ErrorAs(t, err, &pe)
+				require.Equal(t, "too many decimal places for suffix", pe.Message)
 			},
 		},
 		{
@@ -58,9 +53,9 @@ func Test_Parse(t *testing.T) {
 			input: "1.23456789M",
 			want:  0,
 			errCheck: func(t *testing.T, err error) {
-				if err == nil {
-					t.Error("expected error for decimal resulting in fraction")
-				}
+				pe := &ParseError{}
+				require.ErrorAs(t, err, &pe)
+				require.Equal(t, "too many decimal places for suffix", pe.Message)
 			},
 		},
 		{
@@ -68,9 +63,9 @@ func Test_Parse(t *testing.T) {
 			input: "11.k",
 			want:  0,
 			errCheck: func(t *testing.T, err error) {
-				if err == nil {
-					t.Error("expected error for decimal point without decimals")
-				}
+				pe := &ParseError{}
+				require.ErrorAs(t, err, &pe)
+				require.Equal(t, "no digits after decimal point", pe.Message)
 			},
 		},
 		{
@@ -90,14 +85,9 @@ func Test_Parse(t *testing.T) {
 			input: "115_40",
 			want:  0,
 			errCheck: func(t *testing.T, err error) {
-				if err == nil {
-					t.Error("expected error for invalid underscore position")
-				}
-				if parseErr, ok := err.(*ParseError); ok {
-					if parseErr.Pos != 3 {
-						t.Errorf("expected error at position 3, got %d", parseErr.Pos)
-					}
-				}
+				pe := &ParseError{}
+				require.ErrorAs(t, err, &pe)
+				require.Equal(t, "group after underscore must be exactly 3 digits", pe.Message)
 			},
 		},
 		{
@@ -105,9 +95,9 @@ func Test_Parse(t *testing.T) {
 			input: "11540_",
 			want:  0,
 			errCheck: func(t *testing.T, err error) {
-				if err == nil {
-					t.Error("expected error for trailing underscore")
-				}
+				pe := &ParseError{}
+				require.ErrorAs(t, err, &pe)
+				require.Equal(t, "invalid underscore position", pe.Message)
 			},
 		},
 		{
@@ -115,9 +105,9 @@ func Test_Parse(t *testing.T) {
 			input: "",
 			want:  0,
 			errCheck: func(t *testing.T, err error) {
-				if err == nil {
-					t.Error("expected error for empty string")
-				}
+				pe := &ParseError{}
+				require.ErrorAs(t, err, &pe)
+				require.Equal(t, "empty input", pe.Message)
 			},
 		},
 		{
@@ -125,9 +115,9 @@ func Test_Parse(t *testing.T) {
 			input: "+",
 			want:  0,
 			errCheck: func(t *testing.T, err error) {
-				if err == nil {
-					t.Error("expected error for only sign")
-				}
+				pe := &ParseError{}
+				require.ErrorAs(t, err, &pe)
+				require.Equal(t, "no digits after sign", pe.Message)
 			},
 		},
 		{
